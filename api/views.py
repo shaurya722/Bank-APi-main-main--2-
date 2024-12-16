@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import LoginSerializer, RegisterSerializer
+from .serializers import LoginSerializer, LoginSerializerForStaff, RegisterSerializer
 from rest_framework.permissions import AllowAny
 
 
@@ -65,6 +65,38 @@ class LoginView(APIView):
         try:
             data = request.data
             serializer = LoginSerializer(data=data)
+         
+            if not serializer.is_valid():
+                return Response({
+                    'data': serializer.errors,
+                    'message': 'Validation failed.',
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            res = serializer.get_jwt_token(serializer.validated_data)
+            return Response({
+                'data': res['data'],
+                'message': res['message'],
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            import traceback
+            logger.error(f'error is loginview:{traceback.format_exc()}')
+            print(f"Unexpected Error: {e}")
+            return Response({
+                'data': {},
+                'message': 'Something went wrong.',
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+class LoginViewForStaff(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            data = request.data
+            serializer = LoginSerializerForStaff(data=data)
          
             if not serializer.is_valid():
                 return Response({

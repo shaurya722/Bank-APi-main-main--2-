@@ -154,3 +154,31 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",
     
 ]
+
+
+
+from datetime import timedelta
+
+# JWT Token Expiration Settings
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  # Access token expiration time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Refresh token expiration time
+    'ROTATE_REFRESH_TOKENS': True,                 # Rotate refresh tokens on each use
+    'BLACKLIST_AFTER_ROTATION': True,              # Blacklist old refresh tokens after rotation
+    'UPDATE_LAST_LOGIN': True,                     # Update user's last login field on refresh
+
+    'ALGORITHM': 'HS256',                          # Algorithm for token encoding
+    'SIGNING_KEY': SECRET_KEY,                     # Use your Django SECRET_KEY for signing
+    'VERIFYING_KEY': None,                         # Public key for asymmetric algorithms
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),              # Authorization header type
+    'USER_ID_FIELD': 'id',                         # Field to identify user
+    'USER_ID_CLAIM': 'user_id',                    # Claim to store user identifier in the token
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+    # Additional Settings for Token Customization
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
+}

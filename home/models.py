@@ -69,6 +69,8 @@ class Transaction(models.Model):
     bank_to =   models.ForeignKey(Bank, on_delete=models.CASCADE, related_name="transactions",null=True)
     account_to = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions",null=True,default='credit')
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='account', null=False)
+
 
     def __str__(self):
         return f"Transaction {self.id} - {self.transaction_type} on {self.transaction_date}"

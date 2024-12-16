@@ -92,3 +92,52 @@ class LoginSerializer(serializers.Serializer):
                 }
             }
         }
+
+
+
+
+
+
+class LoginSerializerForStaff(serializers.Serializer):
+    email = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        # Use the authenticate function
+        user = authenticate(request=self.context.get('request'), username=email, password=password)
+        
+        if not user:
+            raise serializers.ValidationError('Invalid email or password.')
+
+        if not user.is_active:
+            raise serializers.ValidationError('User account is inactive.')
+
+        if not user.is_verified:  # Assuming `is_verified` is a custom field
+            raise serializers.ValidationError('User account is not verified.')
+        
+        if not user.is_staff:  # Assuming `is_verified` is a custom field
+            raise serializers.ValidationError('User is not authorized.')
+        
+
+        data['user'] = user
+        return data
+
+    def get_jwt_token(self, data):
+        user = data['user']
+        refresh = RefreshToken.for_user(user)
+        return {
+            'message': 'Login successful.',
+            'data': {
+                'token': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token)
+                },
+                'user': {
+                    'email': user.email,
+                    'name': user.get_full_name() if hasattr(user, 'get_full_name') else user.username,
+                }
+            }
+        }
