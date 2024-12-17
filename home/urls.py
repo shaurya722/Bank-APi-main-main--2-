@@ -3,6 +3,7 @@ from .views import (
     BankListCreateView,
     CustomerListCreateView,
     AccountListCreateView,
+    CustomerRetrieveUpdateDestroyView,
     DepositListCreateView,
     # TransactionListCreateView,
     # BankCustomerListCreateView,
@@ -13,6 +14,9 @@ from .views import (
 urlpatterns = [
     path('banks/', BankListCreateView.as_view(), name='bank-list-create'),
     path('customers/', CustomerListCreateView.as_view(), name='customer-list-create'),
+    path('customers/<int:pk>/', CustomerRetrieveUpdateDestroyView.as_view(), name='customer-detail'),
+
+    # path('customers', CustomerListCreateView.as_view(), name='customer-list-create'),
     path('accounts/', AccountListCreateView.as_view(), name='account-list-create'),
     path('transactions/', TransferAPIView.as_view(), name='transaction-list-create'),
     # path('transactions/transfer/', TransferAPIView.as_view(), name='transfer'),  # POST request for transfers

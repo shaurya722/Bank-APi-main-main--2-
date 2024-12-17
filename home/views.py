@@ -1,4 +1,6 @@
 from rest_framework import generics
+
+from api.models import User
 from .models import Bank, Customer, Account, Deposit, Transaction, Withdraw
 from .serializers import BankSerializer, CustomerSerializer, AccountSerializer, DepositSerializer, TransactionSerializer, WithdrawSerializer
 from rest_framework.permissions import IsAuthenticated                          
@@ -17,22 +19,59 @@ from decimal import Decimal
 class BankListCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = Bank.objects.all()
     serializer_class = BankSerializer
+    def get_queryset(self):
+        user = self.request.user
+        print(user)  
+        if user.is_staff:
+            return Account.objects.all()
+        else:
+            return Account.objects.filter(user=user)
+
 
 
 class CustomerListCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = Customer.objects.all()
+
+    serializer_class = BankSerializer
+    def get_queryset(self):
+        user = self.request.user
+        print(user)  
+        if user.is_staff:
+            return Account.objects.all()
+        else:
+            return Account.objects.filter(user=user)
+
+
+class CustomerRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = CustomerSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        print(user)  
+        if user.is_staff:
+            return Account.objects.all()
+        else:
+            return Account.objects.filter(user=user)
 
 
 class AccountListCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = Account.objects.all()
+    # queryset = Account.objects.all()
     serializer_class = AccountSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        print(user)  
+        if user.is_staff:
+            return Account.objects.all()
+        else:
+            return Account.objects.filter(user=user)
+
 
 
 class DepositListCreateView(generics.ListCreateAPIView):
@@ -67,25 +106,36 @@ class WithdrawListCreateView(generics.ListCreateAPIView):
         serializer.save(account=account, user=self.request.user)  # Ensure user is set
 
 
-        
-from rest_framework.views import APIView
+    #    from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.db import transaction as db_transaction
-from decimal import Decimal
-from django.utils.timezone import now
+from rest_framework import status
 from .models import Account, Transaction
+from .serializers import AccountSerializer  # Assuming you have a serializer for Account
+# from .authentication import JWTAuthentication
+from django.utils.timezone import now
+from decimal import Decimal
+from django.db import transaction as db_transaction
+
 
 class TransferAPIView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
+    # GET Method to fetch all available accounts
+    def get(self, request, *args, **kwargs):
+        """
+        Fetch all available accounts for selection as `account_to`.
+        """
+        accounts = Account.objects.all()  # Fetch all accounts
+        serializer = AccountSerializer(accounts, many=True)  # Serialize account data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     # POST Method for making a transfer
     def post(self, request, *args, **kwargs):
         account_from_id = request.data.get('account_from')
         account_to_id = request.data.get('account_to')
+        scheduled_time = request.data.get('scheduled_time')
         amount = request.data.get('amount')
 
         try:
@@ -112,6 +162,7 @@ class TransferAPIView(APIView):
                 Transaction.objects.create(
                     account_from=account_from,
                     account_to=account_to,
+                    scheduled_time=scheduled_time,
                     amount=amount,
                     transaction_date=now(),
                 )
@@ -122,27 +173,3 @@ class TransferAPIView(APIView):
             return Response({"error": "One or both accounts do not exist."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-    # GET Method for fetching recent transactions or account data
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        account_id = request.query_params.get('account_id', None)
-
-        transactions = Transaction.objects.filter(account_from__user=user).order_by('-transaction_date')[:10]
-
-        if account_id:
-            transactions = transactions.filter(account_from__id=account_id)
-
-        transaction_data = [
-            {
-                "id": transaction.id,
-                "account_from": transaction.account_from.id,
-                "account_to": transaction.account_to.id,
-                "amount": str(transaction.amount),
-                "transaction_date": transaction.transaction_date.isoformat(),
-            }
-            for transaction in transactions
-        ]
-
-        return Response({"transactions": transaction_data}, status=status.HTTP_200_OK)

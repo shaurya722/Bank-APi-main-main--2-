@@ -55,25 +55,31 @@ class Account(models.Model):
             self.save()
             return True
         return False
+    
 
+import uuid
+from django.utils.timezone import now
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('DEBIT', 'Debit'),
         ('CREDIT', 'Credit'),
     ]
+
+    transaction_id = models.UUIDField(default=uuid.uuid4,unique=True)  # Unique ID for transaction
     transaction_date = models.DateTimeField(auto_now=True, blank=True)
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
-    bank_from = models.ForeignKey(Bank,on_delete=models.CASCADE,related_name='transactions_from',null=True)
-    account_from = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='transactions_from',null=True,default='debit')
-    bank_to =   models.ForeignKey(Bank, on_delete=models.CASCADE, related_name="transactions",null=True)
-    account_to = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions",null=True,default='credit')
+    bank_from = models.ForeignKey(Bank, on_delete=models.CASCADE, related_name='transactions_from', null=True)
+    account_from = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions_from', null=True, default='debit')
+    bank_to = models.ForeignKey(Bank, on_delete=models.CASCADE, related_name="transactions", null=True)
+    account_to = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions", null=True, default='credit')
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='account', null=False)
-
+    scheduled_time = models.DateTimeField(null=True, blank=True)
+    
+    status = models.CharField(max_length=20, default='pending')
 
     def __str__(self):
-        return f"Transaction {self.id} - {self.transaction_type} on {self.transaction_date}"
+        return f"Transaction {self.transaction_id} - {self.transaction_type} on {self.transaction_date}"
 
 
 class BankCustomer(models.Model):
