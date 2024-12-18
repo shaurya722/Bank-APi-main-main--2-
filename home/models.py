@@ -1,6 +1,7 @@
 from django.db import models
 from django.db import transaction
 from api.models import User  # Assuming User model is imported from your app
+from django.conf import settings
 
 class Bank(models.Model):
     bank_name = models.CharField(max_length=100)
@@ -28,15 +29,14 @@ class Customer(models.Model):
 
 
 class Account(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='account', null=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='account', null=False)
     class AccountType(models.TextChoices):
         SAVINGS = 'SAVINGS', 'Savings'
         CURRENT = 'CURRENT', 'Current'
-        FIXED = 'FIXED', 'Fixed'
 
     account_type = models.CharField(max_length=50, choices=AccountType.choices)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="accounts")
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="accounts",null=True,blank=True)
     bank = models.ForeignKey(Bank, on_delete=models.CASCADE, related_name="accounts")
 
     def __str__(self):

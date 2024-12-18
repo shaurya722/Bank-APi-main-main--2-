@@ -161,7 +161,7 @@ from datetime import timedelta
 
 # JWT Token Expiration Settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  # Access token expiration time
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),  # Access token expiration time
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Refresh token expiration time
     'ROTATE_REFRESH_TOKENS': True,                 # Rotate refresh tokens on each use
     'BLACKLIST_AFTER_ROTATION': True,              # Blacklist old refresh tokens after rotation

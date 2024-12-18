@@ -13,6 +13,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
 
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Account
 
 # Existing Views (No changes)
 
@@ -34,14 +38,14 @@ class CustomerListCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    serializer_class = BankSerializer
+    serializer_class = CustomerSerializer
     def get_queryset(self):
         user = self.request.user
         print(user)  
         if user.is_staff:
-            return Account.objects.all()
+            return Customer.objects.all()
         else:
-            return Account.objects.filter(user=user)
+            return Customer.objects.filter(user=user)
 
 
 class CustomerRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -53,15 +57,50 @@ class CustomerRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         print(user)  
         if user.is_staff:
+            return Customer.objects.all()
+        else:
+            return Customer.objects.filter(user=user)
+
+
+class AccountListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]    
+    serializer_class = AccountSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        print(user)  
+        if user.is_staff:
             return Account.objects.all()
         else:
             return Account.objects.filter(user=user)
+        
 
+@api_view(['POST'])
+def create_account(request):
+    # Ensure that the user field is in the request data
+    user_id = request.data.get('user')
+    if not user_id:
+        return Response({"detail": "User field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-class AccountListCreateView(generics.ListCreateAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    # queryset = Account.objects.all()
+    # Optionally, you can validate if the user exists in the database
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Add the user to the data to be serialized
+    data = request.data
+    data['user'] = user.id  # Make sure to pass the valid user ID
+
+    serializer = AccountSerializer(data=data)
+    if serializer.is_valid():
+        account = serializer.save()  # Save the account with the provided user
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]    
     serializer_class = AccountSerializer
 
     def get_queryset(self):

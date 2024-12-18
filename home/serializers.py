@@ -9,15 +9,6 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = ['id', 'transaction_date', 'transaction_type','account_from', 'bank_from', 'account_to', 'bank_to','amount']
 
-
-class AccountSerializer(serializers.ModelSerializer):
-    bank = serializers.StringRelatedField()
-    transactions = TransactionSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Account
-        fields = ['id', 'account_type', 'balance', 'bank', 'transactions']
-
 # class BankCustomerSerializer(serializers.ModelSerializer):
 #     customer = serializers.StringRelatedField()
 #     bank = serializers.StringRelatedField()
@@ -26,6 +17,14 @@ class AccountSerializer(serializers.ModelSerializer):
 #         model = BankCustomer
 #         fields = ['id', 'bank', 'customer']
 
+
+class AccountSerializer(serializers.ModelSerializer):
+    # bank = serializers.StringRelatedField()
+    transactions = TransactionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Account
+        fields = ['id','user', 'account_type', 'balance', 'transactions']
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
